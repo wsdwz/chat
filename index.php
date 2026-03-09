@@ -322,15 +322,25 @@
             padding: 2px 8px; border-radius: 4px;
         }
 
-        /* 图片与视频 */
+        /* 图片、视频、文件、语音 */
         .message-image {
             max-width: 100%; max-height: 200px; border-radius: 8px; margin: 4px 0; cursor: pointer; object-fit: cover;
         }
         .message-video {
             max-width: 100%; max-height: 200px; border-radius: 12px; margin: 4px 0; cursor: pointer; object-fit: cover; background: #000;
         }
+        .message-file {
+            display: flex; align-items: center; gap: 8px; padding: 8px; background: rgba(0,0,0,0.05); border-radius: 8px; text-decoration: none; color: inherit;
+        }
+        .message.own .message-file { background: rgba(255,255,255,0.2); color: #fff; }
         .message-content:has(.message-image), .message-content:has(.message-video) {
             padding: 4px !important; background: transparent !important;
+        }
+        .system-message {
+            text-align: center; margin: 10px 0;
+        }
+        .system-message span {
+            background: rgba(0,0,0,0.05); color: #878B99; padding: 4px 12px; border-radius: 12px; font-size: 12px;
         }
         
         /* 快捷功能与输入区 */
@@ -418,6 +428,13 @@
             avatar: 'https://picsum.photos/id/'+Math.floor(Math.random()*1000)+'/60/60'
         };
 
+        // 预加载提示音，动态使用当前域名
+        const newMessageAudio = new Audio();
+        newMessageAudio.src = window.location.origin + '/mp3/xm3143.mp3';
+        
+        let lastMessageCount = 0;
+        let isFirstLoad = true;
+
         function sendMessage() {
             const input = document.getElementById('messageInput');
             const content = input.value.trim();
@@ -447,8 +464,25 @@
                 .then(r => r.json())
                 .then(messages => {
                     const area = document.getElementById('messagesArea');
-                    area.innerHTML = '';
-                    messages.forEach(msg => addMessageToDOM(msg, area));
+                    
+                    // 只有在消息数量增加时才重新渲染并播放提示音
+                    if (messages.length > lastMessageCount) {
+                        area.innerHTML = '';
+                        messages.forEach(msg => addMessageToDOM(msg, area));
+                        
+                        // 播放提示音 (排除第一次加载)
+                        if (!isFirstLoad) {
+                            // 检查最后一条消息是否是别人发的
+                            const lastMsg = messages[messages.length - 1];
+                            if (lastMsg.user_id !== userId) {
+                                newMessageAudio.play().catch(e => console.log("播放提示音失败: ", e));
+                            }
+                        }
+                        
+                        setTimeout(() => scrollToBottom(true), 100);
+                        lastMessageCount = messages.length;
+                    }
+                    isFirstLoad = false;
                 });
         }
 
@@ -456,8 +490,13 @@
             const isOwn = message.user_id === userId;
             let contentHtml = message.content || '';
 
+            // 如果内容里包含写死的 lvba3 域名，自动替换为当前域名
+            if (typeof contentHtml === 'string' && contentHtml.includes('lvba3.tyxcu.shop')) {
+                contentHtml = contentHtml.replace(/https?:\/\/lvba3\.tyxcu\.shop/g, window.location.origin);
+            }
+
             // 解析 @全体成员
-            if (message.type === 'text' && contentHtml.includes('@全体成员')) {
+            if (message.type === 'text' && typeof contentHtml === 'string' && contentHtml.includes('@全体成员')) {
                 contentHtml = contentHtml.replace(/@全体成员/g, '<span class="mention-all-tag">@全体成员</span>');
             }
 
@@ -495,11 +534,28 @@
                 } catch(e) { console.error("解析卡片失败", e); }
             }
 
-            // 视频消息处理
+            // 系统消息
+            if (message.type === 'system') {
+                const div = document.createElement('div');
+                div.className = 'system-message';
+                div.innerHTML = `<span>${contentHtml}</span>`;
+                area.appendChild(div);
+                return;
+            }
+
+            // 补充遗漏的语音、文件和视频、图片处理
             if (message.type === 'video') {
-                contentHtml = `<video src="${message.content}" class="message-video" onclick="enterVideoFullscreen(this)" preload="metadata"></video>`;
+                contentHtml = `<video src="${contentHtml}" class="message-video" onclick="enterVideoFullscreen(this)" preload="metadata"></video>`;
             } else if (message.type === 'image') {
-                contentHtml = `<img src="${message.content}" class="message-image">`;
+                contentHtml = `<img src="${contentHtml}" class="message-image">`;
+            } else if (message.type === 'voice') {
+                contentHtml = `<audio src="${contentHtml}" controls style="max-width: 100%; height: 40px;"></audio>`;
+            } else if (message.type === 'file') {
+                const fileName = contentHtml.split('/').pop() || '文件';
+                contentHtml = `<a href="${contentHtml}" target="_blank" class="message-file">
+                    <span style="font-size: 20px;">📄</span>
+                    <span style="word-break: break-all;">${fileName}</span>
+                </a>`;
             }
 
             const avatarUrl = message.user_avatar || `https://picsum.photos/id/10/36/36`;
@@ -567,6 +623,8 @@
                 let text = contentEl ? contentEl.innerText.substring(0, 50) : '[复杂消息]';
                 if(contentEl && contentEl.querySelector('img.message-image')) text = '[图片]';
                 if(contentEl && contentEl.querySelector('video.message-video')) text = '[视频]';
+                if(contentEl && contentEl.querySelector('audio')) text = '[语音]';
+                if(contentEl && contentEl.querySelector('.message-file')) text = '[文件]';
                 items.push({ from, avatar, text });
             });
             
