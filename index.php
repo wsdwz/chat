@@ -806,6 +806,16 @@
 				margin-bottom: 2px;
 			}
 
+			/* 多选模式禁用交互 */
+			body.selection-mode .message-history-card,
+			body.selection-mode .message-image,
+			body.selection-mode .message-video,
+			body.selection-mode .message-file,
+			body.selection-mode a {
+				pointer-events: none !important;
+				cursor: default !important;
+			}
+
 			/* 公告条 */
 			.announcement-bar {
 				background: rgba(255, 140, 0, 0.1);
@@ -1313,7 +1323,7 @@
 				avatar: 'https://picsum.photos/id/' + Math.floor(Math.random() * 1000) + '/60/60'
 			};
 
-			// 预加载提示音，动态使用当前域名
+			// 预加载提示音,动态使用当前域名
 			const newMessageAudio = new Audio();
 			newMessageAudio.src = window.location.origin + '/mp3/xm3143.mp3';
 
@@ -1547,6 +1557,9 @@
 
 			// 视频全屏API调用
 			window.enterVideoFullscreen = function(videoEl) {
+				// 多选模式下禁用
+				if (document.body.classList.contains('selection-mode')) return;
+				
 				if (videoEl.requestFullscreen) videoEl.requestFullscreen();
 				else if (videoEl.webkitRequestFullscreen) videoEl.webkitRequestFullscreen();
 				else if (videoEl.webkitEnterFullscreen) videoEl.webkitEnterFullscreen();
@@ -1743,6 +1756,9 @@
 			window.historyModalStack = [];
 
 			window.openQQHistoryModal = function(payloadStr) {
+				// 多选模式下禁用
+				if (document.body.classList.contains('selection-mode')) return;
+				
 				const payload = JSON.parse(decodeURIComponent(payloadStr));
 				console.log('打开聊天记录模态框:', payload);
 
@@ -1891,6 +1907,9 @@
 
 			// 图片预览功能
 			window.openImagePreview = function(imageUrl) {
+				// 多选模式下禁用
+				if (document.body.classList.contains('selection-mode')) return;
+				
 				console.log('打开图片预览:', imageUrl);
 				const modal = document.getElementById('imagePreviewModal');
 				const image = document.getElementById('imagePreviewContent');
