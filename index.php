@@ -760,12 +760,9 @@
 				transition: transform 0.25s ease;
 			}
 
-			/* 多选气泡定位到头像左侧并居中 */
+			/* 多选气泡 - 基础样式 */
 			.msg-checkbox {
 				position: absolute;
-				left: 8px;
-				top: 50%;
-				transform: translateY(-50%);
 				width: 18px;
 				height: 18px;
 				border-radius: 50%;
@@ -775,11 +772,27 @@
 				align-items: center;
 				justify-content: center;
 				z-index: 10;
+				top: 50%;
+				transform: translateY(-50%);
+			}
+
+			/* 别人的消息：复选框在头像左侧 */
+			.message.other .msg-checkbox {
+				left: 8px;
+			}
+
+			/* 自己的消息：复选框在头像左侧（右对齐布局，所以用 right 定位） */
+			.message.own .msg-checkbox {
+				right: 8px;
 			}
 
 			/* 多选模式时显示气泡并调整消息整体布局 */
-			body.selection-mode .message {
+			body.selection-mode .message.other {
 				padding-left: 34px;
+			}
+
+			body.selection-mode .message.own {
+				padding-right: 34px;
 			}
 
 			body.selection-mode .msg-checkbox {
@@ -1715,7 +1728,7 @@
 				}).then(r => r.json()).then(res => {
 					console.log('转发结果:', res);
 					if (res.success) {
-						alert('转发成功！');
+						alert('转发成功!');
 						closeGroupSelectorModal();
 						exitSelectionMode();
 						if (targetGroupId == groupId) {
