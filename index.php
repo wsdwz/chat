@@ -1639,10 +1639,12 @@
 						}
 					}
 
-					let text = contentEl ? contentEl.innerText.substring(0, 50) : '[复杂消息]';
+					// 初始化变量
 					let type = 'text';
 					let url = '';
+					let text = '[复杂消息]';
 
+					// 先检测媒体类型(优先级高)
 					if (contentEl) {
 						const imgEl = contentEl.querySelector('img.message-image');
 						const videoEl = contentEl.querySelector('video.message-video');
@@ -1665,6 +1667,9 @@
 							type = 'file';
 							url = fileEl.getAttribute('href') || '';
 							text = '[文件]';
+						} else {
+							// 如果不是媒体类型,才使用 innerText
+							text = contentEl.innerText.substring(0, 50) || '[复杂消息]';
 						}
 					}
 
