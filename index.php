@@ -159,14 +159,6 @@
 				justify-content: flex-start;
 			}
 
-			/* 头像容器，用来挂载复选框 */
-			.message-avatar-wrapper {
-				position: relative;
-				display: flex;
-				align-items: center;
-				flex-shrink: 0;
-			}
-
 			/* 头像 */
 			.message-avatar {
 				width: 40px;
@@ -178,11 +170,11 @@
 				box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
 			}
 
-			.message.other .message-avatar-wrapper {
+			.message.other .message-avatar {
 				margin-right: 12px;
 			}
 
-			.message.own .message-avatar-wrapper {
+			.message.own .message-avatar {
 				margin-left: 12px;
 			}
 
@@ -768,12 +760,9 @@
 				transition: transform 0.25s ease;
 			}
 
-			/* 多选气泡 - 相对头像容器定位，永远在头像左侧正中 */
+			/* 多选气泡 - 在消息对面垂直居中 */
 			.msg-checkbox {
 				position: absolute;
-				left: -26px;
-				top: 50%;
-				transform: translateY(-50%);
 				width: 18px;
 				height: 18px;
 				border-radius: 50%;
@@ -783,6 +772,18 @@
 				align-items: center;
 				justify-content: center;
 				z-index: 10;
+				top: 50%;
+				transform: translateY(-50%);
+			}
+
+			/* 别人的消息：复选框在右侧（消息对面） */
+			.message.other .msg-checkbox {
+				right: 8px;
+			}
+
+			/* 自己的消息：复选框在左侧（消息对面） */
+			.message.own .msg-checkbox {
+				left: 8px;
 			}
 
 			/* 多选模式时显示气泡 */
@@ -1359,12 +1360,12 @@
 						console.log('获取到的消息:', messages);
 						const area = document.getElementById('messagesArea');
 
-						// 重新渲染的条件：
+						// 重新渲染的条件:
 						// 1. 消息数量增加
 						// 2. 群聊ID改变
 						// 3. 首次加载
 						if (messages.length > lastMessageCount || currentGroupId !== groupId || isFirstLoad) {
-							console.log('重新渲染消息，原因:',
+							console.log('重新渲染消息,原因:',
 								messages.length > lastMessageCount ? '消息数量增加' :
 								currentGroupId !== groupId ? '群聊ID改变' : '首次加载');
 							area.innerHTML = '';
@@ -1400,7 +1401,7 @@
 				const isOwn = message.user_id === userId;
 				let contentHtml = message.content || '';
 
-				// 如果内容里包含写死的 lvba3 域名，自动替换为当前域名
+				// 如果内容里包含写死的 lvba3 域名,自动替换为当前域名
 				if (typeof contentHtml === 'string' && contentHtml.includes('lvba3.tyxcu.shop')) {
 					contentHtml = contentHtml.replace(/https?:\/\/lvba3\.tyxcu\.shop/g, window.location.origin);
 				}
@@ -1445,7 +1446,7 @@
 								}).join('');
 							}
 							const encodedPayload = encodeURIComponent(JSON.stringify(payload));
-							// 安全处理，避免onclick事件中的语法错误
+							// 安全处理,避免onclick事件中的语法错误
 							contentHtml = `
                             <div class="message-history-card" data-payload="${encodedPayload}" onclick="openQQHistoryModal(this.getAttribute('data-payload'))">
                                 <div class="message-history-title">${payload.title || '群聊的聊天记录'}</div>
@@ -1490,6 +1491,9 @@
 
 				const div = document.createElement('div');
 				div.className = `message ${isOwn ? 'own' : 'other'}`;
+				
+				// 注入复选框用于多选合并转发
+				const checkboxHtml = `<div class="msg-checkbox" onclick="toggleMsgSelect(this.parentElement)"></div>`;
 
 				// 格式化消息时间
 				const timestamp = message.timestamp || new Date().toISOString();
@@ -1497,29 +1501,15 @@
 				const timeStr = date.getHours().toString().padStart(2, '0') + ':' + date.getMinutes().toString().padStart(2,
 				'0');
 
-				// 头像 + 复选框一起放在 wrapper 里
-				const avatarWrapperLeft = !isOwn ? `
-					<div class="message-avatar-wrapper">
-						<div class="msg-checkbox" onclick="toggleMsgSelect(this.closest('.message'))"></div>
-						<img src="${avatarUrl}" class="message-avatar">
-					</div>
-				` : '';
-
-				const avatarWrapperRight = isOwn ? `
-					<div class="message-avatar-wrapper">
-						<div class="msg-checkbox" onclick="toggleMsgSelect(this.closest('.message'))"></div>
-						<img src="${avatarUrl}" class="message-avatar">
-					</div>
-				` : '';
-
 				div.innerHTML = `
-					${avatarWrapperLeft}
+					${checkboxHtml}
+					${!isOwn ? `<img src="${avatarUrl}" class="message-avatar">` : ''}
 					<div class="message-content-wrapper">
 						${!isOwn ? `<div class="message-sender">${senderName}</div>` : ''}
 						<div class="message-content">${contentHtml}</div>
 						<div class="message-time">${timeStr}</div>
 					</div>
-					${avatarWrapperRight}
+					${isOwn ? `<img src="${avatarUrl}" class="message-avatar">` : ''}
 				`;
 
 				// 添加长按事件监听
@@ -1740,12 +1730,12 @@
 							loadMessages();
 						} else {
 							// 提示用户切换到目标群聊查看转发的消息
-							alert('转发成功！请切换到群聊 "' + targetGroupId + '" 查看转发的消息');
+							alert('转发成功!请切换到群聊 "' + targetGroupId + '" 查看转发的消息');
 						}
 					} else alert('失败: ' + res.message);
 				}).catch(error => {
 					console.error('转发请求失败:', error);
-					alert('转发请求失败，请检查网络连接');
+					alert('转发请求失败,请检查网络连接');
 				});
 			};
 
@@ -1833,15 +1823,15 @@
 				}
 			};
 
-			// 关闭聊天记录模态框（支持层级返回）
+			// 关闭聊天记录模态框(支持层级返回)
 			window.closeQQHistoryModal = function() {
-				console.log('关闭聊天记录模态框，当前栈:', window.historyModalStack);
+				console.log('关闭聊天记录模态框,当前栈:', window.historyModalStack);
 
 				// 弹出当前payload
 				window.historyModalStack.pop();
 
 				if (window.historyModalStack.length > 0) {
-					// 如果栈不为空，显示上一层聊天记录
+					// 如果栈不为空,显示上一层聊天记录
 					const previousPayload = window.historyModalStack[window.historyModalStack.length - 1];
 					console.log('返回到上一层聊天记录:', previousPayload);
 
@@ -1891,7 +1881,7 @@
 						bodyElement.innerHTML = itemsHtml;
 					}
 				} else {
-					// 如果栈为空，关闭模态框
+					// 如果栈为空,关闭模态框
 					const modalElement = document.getElementById('qqHistoryModalContainer');
 					if (modalElement) {
 						modalElement.classList.remove('active');
@@ -1929,7 +1919,7 @@
 			});
 
 
-			// 简单的表情插入函数（基础支持）
+			// 简单的表情插入函数(基础支持)
 			function insertEmoji(emoji) {
 				var input = document.getElementById('messageInput');
 				if (!input) return;
@@ -1989,7 +1979,7 @@
 					nameEl.textContent = titleEl ? titleEl.textContent : '群聊';
 				}
 				if (idEl) {
-					idEl.textContent = '群号：' + (typeof groupId !== 'undefined' ? groupId : '--');
+					idEl.textContent = '群号:' + (typeof groupId !== 'undefined' ? groupId : '--');
 				}
 			}
 
@@ -2000,7 +1990,7 @@
 			}
 
 			function openCallPanel() {
-				alert('这里可以接语音/视频通话面板（预留）');
+				alert('这里可以接语音/视频通话面板(预留)');
 			}
 
 
