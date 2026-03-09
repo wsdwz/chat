@@ -5,6 +5,8 @@
 		<meta charset="utf-8" />
 		<meta content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" name="viewport" />
 		<title>聊天室</title>
+		<!-- 消息格式化工具 -->
+		<script src="js/message-formatter.js"></script>
 		<style>
 			* {
 				margin: 0;
