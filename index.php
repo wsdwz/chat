@@ -1394,7 +1394,7 @@
 							lastMessageCount = messages.length;
 							currentGroupId = groupId;
 						}
-					isFirstLoad = false;
+				isFirstLoad = false;
 					}).catch(error => {
 						console.error('加载消息失败:', error);
 					});
@@ -1503,7 +1503,7 @@
 				div.className = `message ${isOwn ? 'own' : 'other'}`;
 				
 				// 注入复选框用于多选合并转发
-				const checkboxHtml = `<div class="msg-checkbox" onclick="toggleMsgSelect(this.parentElement)"></div>`;
+				const checkboxHtml = `<div class="msg-checkbox" onclick="event.stopPropagation(); toggleMsgSelect(this.parentElement)"></div>`;
 
 				// 格式化消息时间
 				const timestamp = message.timestamp || new Date().toISOString();
@@ -1521,6 +1521,16 @@
 					</div>
 					${isOwn ? `<img src="${avatarUrl}" class="message-avatar">` : ''}
 				`;
+
+				// 点击消息时,如果在多选模式则切换选中状态
+				div.addEventListener('click', function(e) {
+					// 防止点击内部链接时触发
+					if (e.target.tagName === 'A' || e.target.closest('a')) return;
+					
+					if (document.body.classList.contains('selection-mode')) {
+						toggleMsgSelect(div);
+					}
+				});
 
 				// 添加长按事件监听
 				div.addEventListener('mousedown', function(e) {
