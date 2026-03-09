@@ -159,6 +159,14 @@
 				justify-content: flex-start;
 			}
 
+			/* 头像容器，用来挂载复选框 */
+			.message-avatar-wrapper {
+				position: relative;
+				display: flex;
+				align-items: center;
+				flex-shrink: 0;
+			}
+
 			/* 头像 */
 			.message-avatar {
 				width: 40px;
@@ -170,11 +178,11 @@
 				box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
 			}
 
-			.message.other .message-avatar {
+			.message.other .message-avatar-wrapper {
 				margin-right: 12px;
 			}
 
-			.message.own .message-avatar {
+			.message.own .message-avatar-wrapper {
 				margin-left: 12px;
 			}
 
@@ -760,9 +768,12 @@
 				transition: transform 0.25s ease;
 			}
 
-			/* 多选气泡 - 基础样式 */
+			/* 多选气泡 - 相对头像容器定位，永远在头像左侧正中 */
 			.msg-checkbox {
 				position: absolute;
+				left: -26px;
+				top: 50%;
+				transform: translateY(-50%);
 				width: 18px;
 				height: 18px;
 				border-radius: 50%;
@@ -772,29 +783,9 @@
 				align-items: center;
 				justify-content: center;
 				z-index: 10;
-				top: 50%;
-				transform: translateY(-50%);
 			}
 
-			/* 别人的消息：复选框在头像左侧 */
-			.message.other .msg-checkbox {
-				left: 8px;
-			}
-
-			/* 自己的消息：复选框在头像左侧（右对齐布局，所以用 right 定位） */
-			.message.own .msg-checkbox {
-				right: 8px;
-			}
-
-			/* 多选模式时显示气泡并调整消息整体布局 */
-			body.selection-mode .message.other {
-				padding-left: 34px;
-			}
-
-			body.selection-mode .message.own {
-				padding-right: 34px;
-			}
-
+			/* 多选模式时显示气泡 */
 			body.selection-mode .msg-checkbox {
 				display: flex;
 			}
@@ -1499,8 +1490,6 @@
 
 				const div = document.createElement('div');
 				div.className = `message ${isOwn ? 'own' : 'other'}`;
-				// 注入复选框用于多选合并转发
-				const checkboxHtml = `<div class="msg-checkbox" onclick="toggleMsgSelect(this.parentElement)"></div>`;
 
 				// 格式化消息时间
 				const timestamp = message.timestamp || new Date().toISOString();
@@ -1508,16 +1497,30 @@
 				const timeStr = date.getHours().toString().padStart(2, '0') + ':' + date.getMinutes().toString().padStart(2,
 				'0');
 
+				// 头像 + 复选框一起放在 wrapper 里
+				const avatarWrapperLeft = !isOwn ? `
+					<div class="message-avatar-wrapper">
+						<div class="msg-checkbox" onclick="toggleMsgSelect(this.closest('.message'))"></div>
+						<img src="${avatarUrl}" class="message-avatar">
+					</div>
+				` : '';
+
+				const avatarWrapperRight = isOwn ? `
+					<div class="message-avatar-wrapper">
+						<div class="msg-checkbox" onclick="toggleMsgSelect(this.closest('.message'))"></div>
+						<img src="${avatarUrl}" class="message-avatar">
+					</div>
+				` : '';
+
 				div.innerHTML = `
-                ${checkboxHtml}
-                ${!isOwn ? `<img src="${avatarUrl}" class="message-avatar">` : ''}
-                <div class="message-content-wrapper">
-                    ${!isOwn ? `<div class="message-sender">${senderName}</div>` : ''}
-                    <div class="message-content">${contentHtml}</div>
-                    <div class="message-time">${timeStr}</div>
-                </div>
-                ${isOwn ? `<img src="${avatarUrl}" class="message-avatar">` : ''}
-            `;
+					${avatarWrapperLeft}
+					<div class="message-content-wrapper">
+						${!isOwn ? `<div class="message-sender">${senderName}</div>` : ''}
+						<div class="message-content">${contentHtml}</div>
+						<div class="message-time">${timeStr}</div>
+					</div>
+					${avatarWrapperRight}
+				`;
 
 				// 添加长按事件监听
 				div.addEventListener('mousedown', function(e) {
