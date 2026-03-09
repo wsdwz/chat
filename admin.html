@@ -1,0 +1,264 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Chat 管理后台</title>
+    <link rel="stylesheet" href="admin.css">
+</head>
+<body>
+    <!-- Toast 弹窗容器 -->
+    <div id="toastContainer" class="toast-container"></div>
+    
+    <div class="app-container">
+        <!-- 左侧导航栏 -->
+        <aside class="sidebar">
+            <div class="sidebar-header">
+                <h2 class="sidebar-title">Chat</h2>
+            </div>
+            <nav class="sidebar-menu">
+                <a href="#" class="menu-item active" onclick="loadGroups()">
+                    <span class="menu-item-icon">💬</span>
+                    <span class="menu-item-text">首页</span>
+                </a>
+                <a href="#" class="menu-item" onclick="loadChatMessages()">
+                    <span class="menu-item-icon">💭</span>
+                    <span class="menu-item-text">群聊列表</span>
+                </a>
+                <a href="#" class="menu-item" onclick="loadGroupInfo()">
+                    <span class="menu-item-icon">📊</span>
+                    <span class="menu-item-text">运营数据</span>
+                </a>
+                <a href="#" class="menu-item" onclick="loadAdminConfig()">
+                    <span class="menu-item-icon">⚙️</span>
+                    <span class="menu-item-text">网站配置</span>
+                </a>
+            </nav>
+            <div class="sidebar-footer">
+                <div class="sidebar-footer-links">
+                    <span>📄 文档</span>
+                    <span>💬 社区</span>
+                </div>
+                <div class="sidebar-footer-user">
+                    <div style="display:flex;align-items:center;gap:8px;">
+                        <div class="sidebar-avatar">A</div>
+                        <span style="font-size:12px;color:#595959;">管理员</span>
+                    </div>
+                    <span style="color:#8C8C8C;">📱</span>
+                </div>
+            </div>
+        </aside>
+        
+        <!-- 右侧主内容 -->
+        <main class="main-panel">
+            <header class="top-nav">
+                <div class="nav-left">
+                    <h1 class="nav-title">首页</h1>
+                </div>
+            </header>
+            
+            <div class="content-wrapper" id="mainContent">
+                <div class="loading">加载中...</div>
+            </div>
+        </main>
+    </div>
+    
+    <!-- 创建群聊模态框 -->
+    <div id="createGroupModal" class="modal">
+        <div class="modal-overlay"></div>
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2 class="modal-title">创建群聊</h2>
+                <button class="close-btn" onclick="closeCreateGroupModal()">×</button>
+            </div>
+            <form id="createGroupForm" enctype="multipart/form-data">
+                <div class="form-group">
+                    <label class="form-label" for="groupName">群名称</label>
+                    <input type="text" class="form-input" id="groupName" name="groupName" required>
+                </div>
+                <div class="form-group">
+                    <label class="form-label" for="groupDesc">群介绍</label>
+                    <textarea class="form-input form-textarea" id="groupDesc" name="groupDesc"></textarea>
+                </div>
+                <div class="form-group">
+                    <label class="form-label" for="groupAnnouncement">群公告</label>
+                    <textarea class="form-input form-textarea" id="groupAnnouncement" name="groupAnnouncement" placeholder="输入群公告内容"></textarea>
+                </div>
+                <div class="form-group">
+                    <label class="form-label" for="groupAvatar">群头像</label>
+                    <input type="file" class="form-input" id="groupAvatar" name="groupAvatar" accept="image/*">
+                </div>
+                <div class="form-group">
+                    <label class="form-label" for="groupMemberLimit">群人数限制</label>
+                    <select class="form-input" id="groupMemberLimit" name="groupMemberLimit">
+                        <option value="10">10人</option>
+                        <option value="100">100人</option>
+                        <option value="500">500人</option>
+                        <option value="1000">1000人</option>
+                        <option value="2000">2000人</option>
+                        <option value="3000">3000人</option>
+                        <option value="5000">5000人</option>
+                        <option value="0">无限制</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label class="form-label" for="groupTag">群聊标签</label>
+                    <input type="text" class="form-input" id="groupTag" name="groupTag" placeholder="输入群聊专属标签">
+                </div>
+                <div style="display: flex; gap: 12px;">
+                    <button type="button" class="btn btn-secondary" onclick="closeCreateGroupModal()" style="flex: 1;">取消</button>
+                    <button type="submit" class="btn btn-primary" style="flex: 1;">创建</button>
+                </div>
+            </form>
+        </div>
+    </div>
+    
+    <!-- 群聊详情模态框 -->
+    <div id="groupDetailModal" class="modal">
+        <div class="modal-overlay"></div>
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2 class="modal-title" id="modalGroupName">群聊详情</h2>
+                <button class="close-btn" onclick="closeGroupDetailModal()">×</button>
+            </div>
+            <div id="groupDetailContent" class="modal-body">
+                <div class="loading">加载中...</div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- 编辑群聊模态框 -->
+    <div id="editGroupModal" class="modal">
+        <div class="modal-overlay"></div>
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2 class="modal-title">编辑群聊</h2>
+                <button class="close-btn" onclick="closeEditGroupModal()">×</button>
+            </div>
+            <form id="editGroupForm" enctype="multipart/form-data">
+                <input type="hidden" id="editGroupId" name="groupId">
+                <div class="form-group">
+                    <label class="form-label" for="editGroupName">群名称</label>
+                    <input type="text" class="form-input" id="editGroupName" name="groupName" required>
+                </div>
+                <div class="form-group">
+                    <label class="form-label" for="editGroupDesc">群介绍</label>
+                    <textarea class="form-input form-textarea" id="editGroupDesc" name="groupDesc"></textarea>
+                </div>
+                <div class="form-group">
+                    <label class="form-label" for="editGroupAnnouncement">群公告</label>
+                    <textarea class="form-input form-textarea" id="editGroupAnnouncement" name="groupAnnouncement"></textarea>
+                </div>
+                <div class="form-group">
+                    <label class="form-label" for="editGroupAvatar">群头像</label>
+                    <input type="file" class="form-input" id="editGroupAvatar" name="groupAvatar" accept="image/*">
+                </div>
+                <div class="form-group">
+                    <label class="form-label" for="editCustomGroupId">自定义群ID（5-10位数字）</label>
+                    <input type="text" class="form-input" id="editCustomGroupId" name="customGroupId" placeholder="留空则使用系统生成的ID">
+                </div>
+                <div class="form-group">
+                    <label class="form-label" for="editGroupMemberLimit">群人数限制</label>
+                    <select class="form-input" id="editGroupMemberLimit" name="groupMemberLimit">
+                        <option value="10">10人</option>
+                        <option value="100">100人</option>
+                        <option value="500">500人</option>
+                        <option value="1000">1000人</option>
+                        <option value="2000">2000人</option>
+                        <option value="3000">3000人</option>
+                        <option value="5000">5000人</option>
+                        <option value="0">无限制</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label class="form-label" for="editGroupTag">群聊标签</label>
+                    <input type="text" class="form-input" id="editGroupTag" name="groupTag" placeholder="输入群聊专属标签">
+                </div>
+                <div style="display: flex; gap: 12px;">
+                    <button type="button" class="btn btn-secondary" onclick="closeEditGroupModal()" style="flex: 1;">取消</button>
+                    <button type="submit" class="btn btn-primary" style="flex: 1;">保存</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- 违禁词管理模态框 -->
+    <div id="bannedWordsModal" class="modal">
+        <div class="modal-overlay"></div>
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2 class="modal-title">违禁词管理</h2>
+                <button class="close-btn" onclick="closeBannedWordsModal()">×</button>
+            </div>
+            <div id="bannedWordsContent" style="padding: 80px 20px 20px; flex: 1; overflow-y: auto;">
+                <div id="groupSelectSection">
+                    <div class="form-group">
+                        <label class="form-label">选择群聊</label>
+                        <div id="groupList" style="max-height: 400px; overflow-y: auto; padding: 16px; background-color: #F6F7F9; border-radius: 6px; margin-top: 8px;">
+                            <div style="text-align: center; color: #999;">加载中...</div>
+                        </div>
+                    </div>
+                </div>
+                <div id="bannedWordsSection" style="display: none;">
+                    <div class="form-group">
+                        <label class="form-label">添加违禁词</label>
+                        <div style="display: flex; gap: 8px; margin-top: 8px;">
+                            <input type="text" id="newBannedWord" class="form-input" placeholder="输入违禁词">
+                            <button type="button" class="btn btn-primary" onclick="addBannedWord()">添加</button>
+                        </div>
+                    </div>
+                    <div class="form-group" style="margin-top: 20px;">
+                        <label class="form-label">当前违禁词列表</label>
+                        <div id="bannedWordsList" style="max-height: 300px; overflow-y: auto; padding: 16px; background-color: #F6F7F9; border-radius: 6px; margin-top: 8px;">
+                            <div style="text-align: center; color: #999;">暂无违禁词</div>
+                        </div>
+                    </div>
+                    <div style="display: flex; gap: 12px; justify-content: flex-end; margin-top: 24px;">
+                        <button type="button" class="btn btn-secondary" onclick="backToGroupSelect()">返回群选择</button>
+                        <button type="button" class="btn btn-primary" onclick="saveBannedWords()">保存</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 添加快捷操作模态框 -->
+    <div id="addQuickActionModal" class="modal">
+        <div class="modal-overlay"></div>
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2 class="modal-title">添加底部标签</h2>
+                <button class="close-btn" onclick="closeAddQuickActionModal()">×</button>
+            </div>
+            <form id="addQuickActionForm">
+                <input type="hidden" id="quickActionGroupId" name="groupId">
+                <div class="form-group">
+                    <label class="form-label" for="quickActionLabel">标签文本</label>
+                    <input type="text" class="form-input" id="quickActionLabel" name="label" required placeholder="例如：联系客服">
+                </div>
+                <div class="form-group">
+                    <label class="form-label" for="quickActionType">标签类型</label>
+                    <select class="form-input" id="quickActionType" name="type" onchange="toggleQuickActionFields()">
+                        <option value="text">发送文本</option>
+                        <option value="link">打开链接</option>
+                    </select>
+                </div>
+                <div class="form-group" id="quickActionContentGroup">
+                    <label class="form-label" for="quickActionContent">消息内容</label>
+                    <textarea class="form-input form-textarea" id="quickActionContent" name="content" required placeholder="输入要发送的消息"></textarea>
+                </div>
+                <div class="form-group" id="quickActionUrlGroup" style="display:none;">
+                    <label class="form-label" for="quickActionUrl">链接地址</label>
+                    <input type="url" class="form-input" id="quickActionUrl" name="url" placeholder="https://example.com">
+                </div>
+                <div style="display: flex; gap: 12px;">
+                    <button type="button" class="btn btn-secondary" onclick="closeAddQuickActionModal()" style="flex: 1;">取消</button>
+                    <button type="submit" class="btn btn-primary" style="flex: 1;">添加</button>
+                </div>
+            </form>
+        </div>
+    </div>
+    
+    <script src="admin.js"></script>
+</body>
+</html>
