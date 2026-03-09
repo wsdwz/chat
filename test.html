@@ -1,0 +1,105 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>UniApp X Web-view 交互示例</title>
+    <style>
+        body {
+            font-family: system-ui, -apple-system, sans-serif;
+            padding: 20px;
+            text-align: center;
+        }
+        button {
+            margin: 10px;
+            padding: 12px 24px;
+            font-size: 16px;
+            background-color: #007aff;
+            color: white;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+        }
+        button:active {
+            background-color: #005bb5;
+        }
+        #status {
+            margin-top: 20px;
+            color: #666;
+            font-size: 14px;
+        }
+    </style>
+</head>
+<body>
+    <h2>Web-view 页面</h2>
+    
+    <!-- 用于显示 SDK 加载状态 -->
+    <div id="status">等待 JSBridge 初始化...</div>
+
+    <!-- 演示直接调用路由跳转 -->
+    <button onclick="navigateToAppPage()">跳转到应用内页面</button>
+    
+    <!-- 演示返回上一页 -->
+    <button onclick="navigateBack()">返回上一页</button>
+    
+    <!-- 演示向应用发送消息 (由应用端接管跳转逻辑) -->
+    <button onclick="postMessageToApp()">向应用发送消息</button>
+
+    <!-- 1. 引入 uni-app 官方提供的 JS-SDK -->
+    <!-- 注意：此处使用的是 1.5.5 或 1.5.6 版本，适用于最新版 uni-app 体系 -->
+    <script type="text/javascript" src="uni.webview.js"></script>
+    
+    <script>
+        // 定义一个标志位，防止在 SDK 未就绪时调用 API
+        let isUniReady = false;
+
+        // 2. 必须监听 UniAppJSBridgeReady 事件，在此事件触发后才能安全调用 uni 的 API
+        document.addEventListener('UniAppJSBridgeReady', function() {
+            isUniReady = true;
+            document.getElementById('status').innerText = 'JSBridge 已就绪，可以调用 uni API' ;
+            document.getElementById('status').style.color = 'green';
+        });
+
+        // 直接调用 uni-app x 的 navigateTo 页面跳转
+        function navigateToAppPage() {
+            if (!isUniReady) {
+                alert('JS SDK 未加载完成，请稍后再试');
+                return;
+            }
+            // 调用原生方法，url 需对应 pages.json 中配置的有效路径
+            uni.webView.navigateTo({
+                url: '/pages/details/details?id=62',
+                success: function() {
+                    console.log('跳转触发成功');
+                },
+                fail: function(err) {
+                    console.error('跳转失败', err);
+                }
+            });
+        }
+
+        // 调用原生返回
+        function navigateBack() {
+            if (!isUniReady) return;
+            uni.webView.navigateBack({
+                delta: 1
+            });
+        }
+
+        // 向应用侧（UTS/Vue）发送消息，可以传递复杂参数让应用侧执行跳转
+        function postMessageToApp() {
+            if (!isUniReady) return;
+            // 提示：向应用发送的消息必须包装在 data 对象中
+            uni.webView.postMessage({
+                data: {
+                    action: 'goDetail',
+                    params: {
+                        id: 456,
+                        type: 'news'
+                    }
+                }
+            });
+        }
+    </script>
+</body>
+</html>
