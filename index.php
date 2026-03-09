@@ -620,6 +620,11 @@
 				padding-bottom: env(safe-area-inset-bottom);
 			}
 
+			/* 多选模式时隐藏输入区但保留占位 */
+			body.selection-mode .input-area {
+				visibility: hidden !important;
+			}
+
 			.quick-actions {
 				display: flex;
 				gap: 16px;
@@ -714,65 +719,67 @@
 				cursor: not-allowed;
 			}
 
-			/* 多选模式样式 */
-			body.selection-mode .input-area {
-				display: none !important;
-			}
-
-			body.selection-mode #selectionBottomBar {
+			/* 多选模式底部操作栏 */
+			#selectionBottomBar {
 				display: none;
 				position: fixed;
 				bottom: 0;
 				left: 0;
 				width: 100%;
-				height: 52px;
-				background: #FFFFFF;
+				height: 56px;
+				background: #F8F8F8;
 				border-top: 0.5px solid #EBEBEB;
 				z-index: 1000;
-				display: flex;
 				justify-content: space-around;
 				align-items: center;
 				padding-bottom: env(safe-area-inset-bottom);
 			}
 
+			body.selection-mode #selectionBottomBar {
+				display: flex;
+			}
+
 			.sel-btn {
-				flex: 1;
 				display: flex;
 				flex-direction: column;
 				align-items: center;
-				justify-content: center;
-				gap: 2px;
+				gap: 4px;
 				background: none;
 				border: none;
 				color: #333;
-				font-size: 11px;
+				font-size: 10px;
 				cursor: pointer;
 			}
 
 			.sel-icon {
 				font-size: 20px;
+				color: #878B99;
 			}
 
 			.message {
 				transition: transform 0.25s ease;
 			}
 
+			/* 多选气泡定位到头像左侧并居中 */
 			.msg-checkbox {
 				position: absolute;
-				/* 以头像为基准：头像宽 40px，左右外边距 12px */
-				left: -4px;
-				/* 根据实际效果微调，例如 -6px/-8px */
+				left: 8px;
 				top: 50%;
 				transform: translateY(-50%);
-				width: 16px;
-				height: 16px;
+				width: 18px;
+				height: 18px;
 				border-radius: 50%;
-				border: 1px solid #D5D5D5;
+				border: 1.5px solid #D5D5D5;
 				background: #FFFFFF;
 				display: none;
 				align-items: center;
 				justify-content: center;
 				z-index: 10;
+			}
+
+			/* 多选模式时显示气泡并调整消息整体布局 */
+			body.selection-mode .message {
+				padding-left: 34px;
 			}
 
 			body.selection-mode .msg-checkbox {
@@ -792,38 +799,6 @@
 				border-width: 0 1.5px 1.5px 0;
 				transform: rotate(45deg);
 				margin-bottom: 2px;
-			}
-
-			#selectionBottomBar {
-				display: none;
-				position: fixed;
-				bottom: 0;
-				left: 0;
-				width: 100%;
-				height: 56px;
-				background: #F8F8F8;
-				border-top: 0.5px solid #EBEBEB;
-				z-index: 1000;
-				justify-content: space-around;
-				align-items: center;
-				padding-bottom: env(safe-area-inset-bottom);
-			}
-
-			.sel-btn {
-				display: flex;
-				flex-direction: column;
-				align-items: center;
-				gap: 4px;
-				background: none;
-				border: none;
-				color: #333;
-				font-size: 10px;
-				cursor: pointer;
-			}
-
-			.sel-icon {
-				font-size: 20px;
-				color: #878B99;
 			}
 
 			/* 公告条 */
