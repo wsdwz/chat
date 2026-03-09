@@ -231,7 +231,7 @@
 				box-shadow: 0 1px 2px rgba(18, 183, 245, 0.15);
 			}
 
-			/* 消息时间 (隐藏，QQ一般不在气泡下显示时间，只在消息间隙显示，这里保留原功能并弱化) */
+			/* 消息时间 (隐藏,QQ一般不在气泡下显示时间,只在消息间隙显示,这里保留原功能并弱化) */
 			.message-time {
 				font-size: 10px;
 				color: var(--text-tertiary);
@@ -483,6 +483,29 @@
 				color: #000;
 				line-height: 1.5;
 				word-wrap: break-word;
+			}
+
+			/* 聊天记录预览中的图片/视频样式 */
+			.wx-text img {
+				max-width: 140px;
+				max-height: 200px;
+				border-radius: 8px;
+				cursor: pointer;
+				object-fit: cover;
+				border: 0.5px solid rgba(0, 0, 0, 0.05);
+				display: block;
+				margin: 4px 0;
+			}
+
+			.wx-text video {
+				max-width: 140px;
+				max-height: 200px;
+				border-radius: 8px;
+				cursor: pointer;
+				object-fit: cover;
+				background: #000;
+				display: block;
+				margin: 4px 0;
 			}
 
 			/* ------------------ 转发群聊选择器 ------------------ */
@@ -776,12 +799,12 @@
 				transform: translateY(-50%);
 			}
 
-			/* 别人的消息：复选框在右侧（消息对面） */
+			/* 别人的消息:复选框在右侧(消息对面) */
 			.message.other .msg-checkbox {
 				right: 8px;
 			}
 
-			/* 自己的消息：复选框在左侧（消息对面） */
+			/* 自己的消息:复选框在左侧(消息对面) */
 			.message.own .msg-checkbox {
 				left: 8px;
 			}
@@ -860,7 +883,7 @@
 				display: none;
 			}
 
-			/* 移动端预览通常点背景退出，隐藏关闭按钮 */
+			/* 移动端预览通常点背景退出,隐藏关闭按钮 */
 
 			/* 表情面板 QQ 风格 */
 			.emoji-panel {
@@ -1831,13 +1854,33 @@
                         </div>
                     `;
 					} else {
-						// 普通消息
+						// 根据消息类型渲染实际内容
+						let contentHtml = '';
+						
+						if (it.type === 'image' && it.url) {
+							// 显示实际图片
+							contentHtml = `<img src="${it.url}" onclick="openImagePreview('${it.url}')" style="max-width: 140px; max-height: 200px; border-radius: 8px; cursor: pointer; object-fit: cover; border: 0.5px solid rgba(0, 0, 0, 0.05); display: block; margin: 4px 0;">`;
+						} else if (it.type === 'video' && it.url) {
+							// 显示实际视频
+							contentHtml = `<video src="${it.url}" onclick="enterVideoFullscreen(this)" preload="metadata" style="max-width: 140px; max-height: 200px; border-radius: 8px; cursor: pointer; object-fit: cover; background: #000; display: block; margin: 4px 0;"></video>`;
+						} else if (it.type === 'voice' && it.url) {
+							// 显示音频播放器
+							contentHtml = `<audio src="${it.url}" controls style="max-width: 100%; height: 40px;"></audio>`;
+						} else if (it.type === 'file' && it.url) {
+							// 显示文件链接
+							const fileName = it.url.split('/').pop() || '文件';
+							contentHtml = `<a href="${it.url}" target="_blank" style="display: flex; align-items: center; gap: 8px; padding: 8px 12px; background: #F5F5F5; border-radius: 8px; text-decoration: none; color: #000; border: 0.5px solid rgba(0, 0, 0, 0.05);"><span style="font-size: 18px;">📄</span><span style="word-break: break-all;">${fileName}</span></a>`;
+						} else {
+							// 普通文本消息
+							contentHtml = it.text || '';
+						}
+						
 						return `
                         <div class="wx-item">
                             <img src="${it.avatar || 'https://picsum.photos/id/1005/60/60'}" class="wx-avatar">
                             <div class="wx-content">
                                 <div class="wx-name">${it.from}</div>
-                                <div class="wx-text">${it.text}</div>
+                                <div class="wx-text">${contentHtml}</div>
                             </div>
                         </div>
                     `;
@@ -1901,12 +1944,28 @@
                             </div>
                         `;
 						} else {
+							// 根据消息类型渲染实际内容
+							let contentHtml = '';
+							
+							if (it.type === 'image' && it.url) {
+								contentHtml = `<img src="${it.url}" onclick="openImagePreview('${it.url}')" style="max-width: 140px; max-height: 200px; border-radius: 8px; cursor: pointer; object-fit: cover; border: 0.5px solid rgba(0, 0, 0, 0.05); display: block; margin: 4px 0;">`;
+							} else if (it.type === 'video' && it.url) {
+								contentHtml = `<video src="${it.url}" onclick="enterVideoFullscreen(this)" preload="metadata" style="max-width: 140px; max-height: 200px; border-radius: 8px; cursor: pointer; object-fit: cover; background: #000; display: block; margin: 4px 0;"></video>`;
+							} else if (it.type === 'voice' && it.url) {
+								contentHtml = `<audio src="${it.url}" controls style="max-width: 100%; height: 40px;"></audio>`;
+							} else if (it.type === 'file' && it.url) {
+								const fileName = it.url.split('/').pop() || '文件';
+								contentHtml = `<a href="${it.url}" target="_blank" style="display: flex; align-items: center; gap: 8px; padding: 8px 12px; background: #F5F5F5; border-radius: 8px; text-decoration: none; color: #000; border: 0.5px solid rgba(0, 0, 0, 0.05);"><span style="font-size: 18px;">📄</span><span style="word-break: break-all;">${fileName}</span></a>`;
+							} else {
+								contentHtml = it.text || '';
+							}
+							
 							return `
                             <div class="wx-item">
                                 <img src="${it.avatar || 'https://picsum.photos/id/1005/60/60'}" class="wx-avatar">
                                 <div class="wx-content">
                                     <div class="wx-name">${it.from}</div>
-                                    <div class="wx-text">${it.text}</div>
+                                    <div class="wx-text">${contentHtml}</div>
                                 </div>
                             </div>
                         `;
