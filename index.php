@@ -1394,7 +1394,7 @@
 							lastMessageCount = messages.length;
 							currentGroupId = groupId;
 						}
-						isFirstLoad = false;
+					isFirstLoad = false;
 					}).catch(error => {
 						console.error('加载消息失败:', error);
 					});
@@ -1558,7 +1558,10 @@
 			// 视频全屏API调用
 			window.enterVideoFullscreen = function(videoEl) {
 				// 多选模式下禁用
-				if (document.body.classList.contains('selection-mode')) return;
+				if (document.body.classList.contains('selection-mode')) {
+					console.log('多选模式下禁用视频播放');
+					return;
+				}
 				
 				if (videoEl.requestFullscreen) videoEl.requestFullscreen();
 				else if (videoEl.webkitRequestFullscreen) videoEl.webkitRequestFullscreen();
@@ -1757,7 +1760,10 @@
 
 			window.openQQHistoryModal = function(payloadStr) {
 				// 多选模式下禁用
-				if (document.body.classList.contains('selection-mode')) return;
+				if (document.body.classList.contains('selection-mode')) {
+					console.log('多选模式下禁用聊天记录查看');
+					return;
+				}
 				
 				const payload = JSON.parse(decodeURIComponent(payloadStr));
 				console.log('打开聊天记录模态框:', payload);
@@ -1908,7 +1914,10 @@
 			// 图片预览功能
 			window.openImagePreview = function(imageUrl) {
 				// 多选模式下禁用
-				if (document.body.classList.contains('selection-mode')) return;
+				if (document.body.classList.contains('selection-mode')) {
+					console.log('多选模式下禁用图片预览');
+					return;
+				}
 				
 				console.log('打开图片预览:', imageUrl);
 				const modal = document.getElementById('imagePreviewModal');
