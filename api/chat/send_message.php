@@ -97,7 +97,16 @@ if (!$isRealAdmin) {
 
 // 防御XSS: 对文本内容和用户信息进行转义
 if (($messageData['type'] ?? 'text') === 'text' && isset($messageData['content'])) {
+    if (strpos($messageData['content'], '@全体成员') !== false) {
+        $messageData['is_mention_all'] = true;
+    }
     $messageData['content'] = htmlspecialchars($messageData['content'], ENT_QUOTES, 'UTF-8');
+} elseif (in_array(($messageData['type'] ?? ''), ['card', 'history']) && isset($messageData['content'])) {
+    $decoded = json_decode($messageData['content'], true);
+    if (json_last_error() !== JSON_ERROR_NONE) {
+        $messageData['type'] = 'text';
+        $messageData['content'] = htmlspecialchars($messageData['content'], ENT_QUOTES, 'UTF-8');
+    }
 }
 if (isset($messageData['user_nickname'])) {
     $messageData['user_nickname'] = htmlspecialchars($messageData['user_nickname'], ENT_QUOTES, 'UTF-8');
