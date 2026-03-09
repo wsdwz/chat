@@ -79,6 +79,35 @@ if (strpos($contentType, 'multipart/form-data') !== false) {
     $userAvatar = $messageData['user_avatar'] ?? null;
 }
 
+// ========== 安全层：防御XSS 和 身份伪造 ==========
+if (session_status() === PHP_SESSION_NONE) {
+    session_start();
+}
+$isRealAdmin = !empty($_SESSION['admin_logged_in']);
+if (!$isRealAdmin) {
+    // 如果不是真管理员，强制重置危险字段，防伪造
+    if ($userId === 'admin' || !empty($messageData['is_admin'])) {
+        echo json_encode(['success' => false, 'message' => '非法操作：无管理员权限']);
+        exit;
+    }
+    if (isset($messageData)) {
+        $messageData['is_admin'] = false;
+    }
+}
+
+// 防御XSS: 对文本内容和用户信息进行转义
+if (($messageData['type'] ?? 'text') === 'text' && isset($messageData['content'])) {
+    $messageData['content'] = htmlspecialchars($messageData['content'], ENT_QUOTES, 'UTF-8');
+}
+if (isset($messageData['user_nickname'])) {
+    $messageData['user_nickname'] = htmlspecialchars($messageData['user_nickname'], ENT_QUOTES, 'UTF-8');
+}
+if (isset($messageData['user_avatar'])) {
+    $messageData['user_avatar'] = htmlspecialchars($messageData['user_avatar'], ENT_QUOTES, 'UTF-8');
+}
+$userNickname = $messageData['user_nickname'] ?? null; // 更新变量
+// ===============================================
+
 // 检查必要参数
 if (!$groupId || !$userNickname) {
     echo json_encode(['success' => false, 'message' => '缺少必要参数']);

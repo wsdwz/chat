@@ -32,6 +32,12 @@ return [
     'security' => [
         'allowed_ips' => ['*'], // 允许所有IP访问
         'csrf_protection' => false
+    ],
+    
+    // 管理员配置
+    'admin' => [
+        'username' => 'admin',
+        'password' => 'admin123'
     ]
 ];
 

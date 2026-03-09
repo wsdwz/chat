@@ -1,5 +1,21 @@
 <?php
 
+// ========== 安全层：API鉴权 ==========
+if (session_status() === PHP_SESSION_NONE) {
+    session_start();
+}
+$request_uri = $_SERVER['REQUEST_URI'] ?? $_SERVER['PHP_SELF'];
+
+// 1. 拦截对 /api/admin/ 下所有接口的未授权访问
+if (strpos($request_uri, '/api/admin/') !== false) {
+    if (empty($_SESSION['admin_logged_in'])) {
+        header('Content-Type: application/json');
+        echo json_encode(['success' => false, 'message' => 'Unauthorized']);
+        exit;
+    }
+}
+// ======================================
+
 /**
  * 数据管理类 - 负责JSON数据的读写操作
  */
