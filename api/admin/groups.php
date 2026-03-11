@@ -4,7 +4,7 @@
 ini_set('display_errors', 0);
 error_reporting(0);
 
-// 设置CORS头，允许所有来源
+// 设CORS头，允许所有来源
 header('Access-Control-Allow-Origin: *');
 header('Access-Control-Allow-Methods: POST, GET, OPTIONS');
 header('Access-Control-Allow-Headers: Content-Type');
@@ -18,7 +18,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'OPTIONS') {
 try {
     require_once '../../core/data_handler.php';
 
-// 初始化GroupManager
+// 初始GroupManager
 $groupManager = new GroupManager();
 
 // 获取单个群聊
@@ -154,6 +154,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $bannedWords = $_POST['groupBannedWords'];
     $memberLimit = $_POST['groupMemberLimit'] ?? 0;
     $groupTag = $_POST['groupTag'] ?? '';
+    $showInDefault = isset($_POST['show_in_default']) ? 1 : 0;
     
     // 处理违禁词
     $bannedWordsArray = [];
@@ -169,7 +170,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         'avatar' => $avatar,
         'banned_words' => $bannedWordsArray,
         'member_limit' => $memberLimit,
-        'tag' => $groupTag
+        'tag' => $groupTag,
+        'show_in_default' => $showInDefault
     ];
     
     $newGroup = $groupManager->createGroup($groupData);
