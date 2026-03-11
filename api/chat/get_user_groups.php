@@ -1,5 +1,5 @@
 <?php
-// 设置CORS头
+// 设CORS头
 header('Access-Control-Allow-Origin: *');
 header('Access-Control-Allow-Methods: GET, POST');
 header('Access-Control-Allow-Headers: Content-Type');
@@ -110,7 +110,7 @@ $user = $userManager->getUser($userId);
 // 获取用户加入的群聊ID
 $joinedGroupIds = $user['joined_groups'] ?? [];
 
-// 确保joinedGroups是数组
+// 确保joined_groups是数组
 if (!is_array($joinedGroupIds)) {
     $joinedGroupIds = [];
 }
@@ -121,6 +121,8 @@ $allGroups = $groupManager->getAllGroups();
 $groupIndex = [];
 // 从群聊的members字段中恢复用户的群聊列表
 $recoveredGroupIds = [];
+// 收集 show_in_default=1 的群聊ID（默认展示给所有用户）
+$defaultShowGroupIds = [];
 foreach ($allGroups as $group) {
     $groupIndex[$group['id']] = $group;
     if (!empty($group['custom_group_id'])) {
@@ -129,6 +131,10 @@ foreach ($allGroups as $group) {
     // 检查用户是否在群聊的members字段中
     if (isset($group['members']) && is_array($group['members']) && in_array($userId, $group['members'])) {
         $recoveredGroupIds[] = $group['id'];
+    }
+    // 收集默认展示的群聊
+    if (!empty($group['show_in_default'])) {
+        $defaultShowGroupIds[] = $group['id'];
     }
 }
 
@@ -147,7 +153,11 @@ if (empty($joinedGroupIds) && !empty($recoveredGroupIds)) {
     $userManager->saveUser($userId, $userData);
 }
 
-foreach ($joinedGroupIds as $groupId) {
+// 合并用户加入的群 + 默认展示的群（去重）
+$allDisplayGroupIds = array_unique(array_merge($joinedGroupIds, $defaultShowGroupIds));
+
+$userGroups = [];
+foreach ($allDisplayGroupIds as $groupId) {
     // 查找群聊
     $group = null;
     // 首先在索引中查找
@@ -206,6 +216,7 @@ foreach ($joinedGroupIds as $groupId) {
             'member_count' => $memberCount,
             'member_limit' => $memberLimit,
             'tag' => $tag,
+            'show_in_default' => !empty($group['show_in_default']) ? 1 : 0,
             'latest_message' => $latestMessage ? [
                 'content' => $latestMessage['content'] ?? '',
                 'timestamp' => $latestMessage['timestamp'] ?? '',
